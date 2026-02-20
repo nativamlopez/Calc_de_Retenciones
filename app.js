@@ -127,23 +127,31 @@ function montoEnPalabras(monto){
   const x = Number(monto);
   if (!Number.isFinite(x)) return "—";
 
-  const abs = Math.abs(x);
-  const entero = Math.floor(abs + 1e-9);
-  const cent = Math.round((abs - entero) * 100);
+  // 1) Redondea el monto a 2 decimales ANTES de separar entero/centavos
+  const red = Math.round((x + Number.EPSILON) * 100) / 100;
+
+  // 2) Separación segura (evita errores binarios)
+  const abs = Math.abs(red);
+  let entero = Math.floor(abs);
+  let cent = Math.round((abs - entero) * 100);
+
+  // 3) Si por redondeo centavos da 100, corregimos
+  if (cent === 100) {
+    entero += 1;
+    cent = 0;
+  }
 
   let palabras = toWordsES_int(entero);
 
-  // Ajuste típico: "UNO" -> "UN" antes de "BOLIVIANOS"
-  // (solo si termina exactamente en "UNO")
+  // "UNO" -> "UN" al final (antes de moneda)
   palabras = palabras.replace(/\bUNO\b$/, "UN");
 
   const cents = `${twoDigits(cent)}/100`;
   const moneda = (entero === 1) ? "BOLIVIANO" : "BOLIVIANOS";
+  const signo = red < 0 ? "MENOS " : "";
 
-  const signo = x < 0 ? "MENOS " : "";
   return `${signo}${palabras} ${cents} ${moneda}`.trim();
 }
-
 function setCells([mn, it, iue, rciva, total, liq]) {
   $("mn").textContent = money(mn);
   $("it").textContent = money(it);
