@@ -81,7 +81,7 @@ function toWordsES_int(n){
     20:"VEINTE", 21:"VEINTIUNO", 22:"VEINTIDÓS", 23:"VEINTITRÉS", 24:"VEINTICUATRO",
     25:"VEINTICINCO", 26:"VEINTISÉIS", 27:"VEINTISIETE", 28:"VEINTIOCHO", 29:"VEINTINUEVE"
   };
-  const decenas = ["", "", "", "TREINTA", "CUARENTA", "CINCUENTA", "SESENTA", "SETENTA", "OCHENTA", "NOVENTA"];
+  const decenas = ["", "", "","", "TREINTA", "CUARENTA", "CINCUENTA", "SESENTA", "SETENTA", "OCHENTA", "NOVENTA"];
   const centenas = ["", "CIENTO", "DOSCIENTOS", "TRESCIENTOS", "CUATROCIENTOS", "QUINIENTOS", "SEISCIENTOS", "SETECIENTOS", "OCHOCIENTOS", "NOVECIENTOS"];
 
   function menosDe100(x){
@@ -229,5 +229,6 @@ document.addEventListener("click", e=>{
   }
 
 });
+
 
 
