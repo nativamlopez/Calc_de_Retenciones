@@ -158,6 +158,8 @@ function setCells([mn, it, iue, rciva, total, liq]) {
 
 function updateBienVisibility() {
   const wrap = $("bienWrap");
+  if (!wrap) return;
+
   const isRecibo = (tipoActual === "Recibo");
   wrap.style.display = isRecibo ? "flex" : "none";
 }
@@ -223,4 +225,5 @@ document.addEventListener("click", e=>{
   if(!e.target.closest(".custom-select")){
     items.classList.add("select-hide");
   }
+
 });
