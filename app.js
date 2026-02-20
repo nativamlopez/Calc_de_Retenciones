@@ -81,7 +81,7 @@ function toWordsES_int(n){
     20:"VEINTE", 21:"VEINTIUNO", 22:"VEINTIDÓS", 23:"VEINTITRÉS", 24:"VEINTICUATRO",
     25:"VEINTICINCO", 26:"VEINTISÉIS", 27:"VEINTISIETE", 28:"VEINTIOCHO", 29:"VEINTINUEVE"
   };
-  const decenas = ["", "", "","", "TREINTA", "CUARENTA", "CINCUENTA", "SESENTA", "SETENTA", "OCHENTA", "NOVENTA"];
+  const decenas = ["", "","", "TREINTA", "CUARENTA", "CINCUENTA", "SESENTA", "SETENTA", "OCHENTA", "NOVENTA"];
   const centenas = ["", "CIENTO", "DOSCIENTOS", "TRESCIENTOS", "CUATROCIENTOS", "QUINIENTOS", "SEISCIENTOS", "SETECIENTOS", "OCHOCIENTOS", "NOVECIENTOS"];
 
   function menosDe100(x){
@@ -127,22 +127,20 @@ function montoEnPalabras(monto){
   const x = Number(monto);
   if (!Number.isFinite(x)) return "—";
 
-  // ✅ CORRECCIÓN CLAVE
-  const red = Math.round(x * 100) / 100;
-
-  const abs = Math.abs(red);
-  const entero = Math.floor(abs);
+  const abs = Math.abs(x);
+  const entero = Math.floor(abs + 1e-9);
   const cent = Math.round((abs - entero) * 100);
 
   let palabras = toWordsES_int(entero);
 
-  // UNO → UN antes de moneda
+  // Ajuste típico: "UNO" -> "UN" antes de "BOLIVIANOS"
+  // (solo si termina exactamente en "UNO")
   palabras = palabras.replace(/\bUNO\b$/, "UN");
 
   const cents = `${twoDigits(cent)}/100`;
   const moneda = (entero === 1) ? "BOLIVIANO" : "BOLIVIANOS";
 
-  const signo = red < 0 ? "MENOS " : "";
+  const signo = x < 0 ? "MENOS " : "";
   return `${signo}${palabras} ${cents} ${moneda}`.trim();
 }
 
@@ -160,8 +158,6 @@ function setCells([mn, it, iue, rciva, total, liq]) {
 
 function updateBienVisibility() {
   const wrap = $("bienWrap");
-  if (!wrap) return;
-
   const isRecibo = (tipoActual === "Recibo");
   wrap.style.display = isRecibo ? "flex" : "none";
 }
@@ -227,8 +223,4 @@ document.addEventListener("click", e=>{
   if(!e.target.closest(".custom-select")){
     items.classList.add("select-hide");
   }
-
 });
-
-
-
