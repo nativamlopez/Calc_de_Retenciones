@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Calculadora de Retenciones</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="screen">
+    <header class="hero">
+      <h1 class="title">CALCULADORA</h1>
+      <h2 class="subtitle">DE RETENCIONES</h2>
+    </header>
+
+    <section class="panel">
+      <form id="form" class="form" autocomplete="off">
+        <label class="field field--select">
+          <span class="label">TIPO</span>
+          <div class="custom-select" id="tipoSelect">
+            <div class="select-selected" id="selectedTipo">
+              Factura
+            </div>
+
+            <div class="select-items select-hide">
+              <div data-value="Factura">Factura</div>
+              <div data-value="Peaje">Peaje</div>
+              <div data-value="Recibo">Recibo</div>
+              <div data-value="Viatico">Viático</div>
+              <div data-value="Planilla">Planilla</div>
+              <div data-value="DJ">DJ</div>
+            </div>
+          </div>
+        </label>
+
+        <label class="check" id="bienWrap" title="Solo aplica para Recibo">
+          <input id="bien" type="checkbox" />
+          <span>¿ES UN BIEN?</span>
+        </label>
+
+        <label class="field field--line">
+          <span class="label">LÍQUIDO (Bs)</span>
+          <input id="liquido" type="number" inputmode="decimal" step="0.01" min="0" placeholder="100.00" required />
+          <span class="line"></span>
+        </label>
+
+        <button type="submit" class="cta">CALCULAR RETENCIONES</button>
+
+        <p class="hint" id="hint">Selecciona el tipo y escribe el líquido.</p>
+      </form>
+    </section>
+
+    <section class="results">
+      <h3 class="resultsTitle">RESULTADOS</h3>
+
+      <div class="rows" role="list">
+        <div class="row" role="listitem">
+          <span class="k">MONTO NETO</span>
+          <span class="v" id="mn">—</span>
+        </div>
+
+        <div class="row" role="listitem">
+          <span class="k">IT 3%</span>
+          <span class="v" id="it">—</span>
+        </div>
+
+        <div class="row" role="listitem">
+          <span class="k">IUE BIEN 5%</span>
+          <span class="v" id="iue">—</span>
+        </div>
+
+        <div class="row" role="listitem">
+          <span class="k">RC - IVA 13%</span>
+          <span class="v" id="rciva">—</span>
+        </div>
+
+        <div class="row row--strong" role="listitem">
+          <span class="k">TOTAL RETENCIÓN</span>
+          <span class="v" id="total">—</span>
+        </div>
+
+        <div class="row row--strong" role="listitem">
+          <span class="k">LÍQUIDO PAGABLE</span>
+          <span class="v" id="liqOut">—</span>
+        </div>
+      </div>
+
+      <div class="wordsCard" aria-live="polite">
+        <div class="wordsLabel">MONTO NETO EN PALABRAS</div>
+        <div class="wordsValue" id="mnWords">—</div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div class="brand">NATIVA 2025</div>
+      <div class="by">Hecho por: Matias Lopez Bertram</div>
+    </footer>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
