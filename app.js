@@ -127,20 +127,22 @@ function montoEnPalabras(monto){
   const x = Number(monto);
   if (!Number.isFinite(x)) return "—";
 
-  const abs = Math.abs(x);
-  const entero = Math.floor(abs + 1e-9);
+  // ✅ CORRECCIÓN CLAVE
+  const red = Math.round(x * 100) / 100;
+
+  const abs = Math.abs(red);
+  const entero = Math.floor(abs);
   const cent = Math.round((abs - entero) * 100);
 
   let palabras = toWordsES_int(entero);
 
-  // Ajuste típico: "UNO" -> "UN" antes de "BOLIVIANOS"
-  // (solo si termina exactamente en "UNO")
+  // UNO → UN antes de moneda
   palabras = palabras.replace(/\bUNO\b$/, "UN");
 
   const cents = `${twoDigits(cent)}/100`;
   const moneda = (entero === 1) ? "BOLIVIANO" : "BOLIVIANOS";
 
-  const signo = x < 0 ? "MENOS " : "";
+  const signo = red < 0 ? "MENOS " : "";
   return `${signo}${palabras} ${cents} ${moneda}`.trim();
 }
 
@@ -227,3 +229,4 @@ document.addEventListener("click", e=>{
   }
 
 });
+
