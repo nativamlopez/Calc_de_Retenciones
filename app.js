@@ -70,35 +70,49 @@ function money(n) {
 function twoDigits(n){ return String(n).padStart(2, "0"); }
 
 function toWordsES_int(n){
-  n = Math.floor(Math.abs(n));
+  n = Math.floor(Math.abs(Number(n)));
 
+  if (!Number.isFinite(n)) return "—";
   if (n === 0) return "CERO";
 
   const unidades = ["", "UNO", "DOS", "TRES", "CUATRO", "CINCO", "SEIS", "SIETE", "OCHO", "NUEVE"];
+
   const especiales = {
     10:"DIEZ", 11:"ONCE", 12:"DOCE", 13:"TRECE", 14:"CATORCE", 15:"QUINCE",
     16:"DIECISÉIS", 17:"DIECISIETE", 18:"DIECIOCHO", 19:"DIECINUEVE",
     20:"VEINTE", 21:"VEINTIUNO", 22:"VEINTIDÓS", 23:"VEINTITRÉS", 24:"VEINTICUATRO",
     25:"VEINTICINCO", 26:"VEINTISÉIS", 27:"VEINTISIETE", 28:"VEINTIOCHO", 29:"VEINTINUEVE"
   };
-  const decenas = ["", "","", "TREINTA", "CUARENTA", "CINCUENTA", "SESENTA", "SETENTA", "OCHENTA", "NOVENTA"];
+
+  const decenasMap = {
+    3:"TREINTA", 4:"CUARENTA", 5:"CINCUENTA",
+    6:"SESENTA", 7:"SETENTA", 8:"OCHENTA", 9:"NOVENTA"
+  };
+
   const centenas = ["", "CIENTO", "DOSCIENTOS", "TRESCIENTOS", "CUATROCIENTOS", "QUINIENTOS", "SEISCIENTOS", "SETECIENTOS", "OCHOCIENTOS", "NOVECIENTOS"];
 
   function menosDe100(x){
     if (x < 10) return unidades[x];
-    if (x in especiales) return especiales[x];
+    if (especiales[x]) return especiales[x];
+
     const d = Math.floor(x / 10);
     const u = x % 10;
-    return u === 0 ? decenas[d] : `${decenas[d]} Y ${unidades[u]}`;
+
+    const tens = decenasMap[d] || ""; // 30..90
+    if (u === 0) return tens;
+    return `${tens} Y ${unidades[u]}`.trim();
   }
 
   function menosDe1000(x){
     if (x === 0) return "";
     if (x === 100) return "CIEN";
+
     const c = Math.floor(x / 100);
     const r = x % 100;
+
     const a = c ? centenas[c] : "";
     const b = r ? menosDe100(r) : "";
+
     return [a, b].filter(Boolean).join(" ").trim();
   }
 
@@ -115,8 +129,10 @@ function toWordsES_int(n){
   if (n >= 1000){
     const t = Math.floor(n / 1000);
     const rest = n % 1000;
+
     const tt = (t === 1) ? "MIL" : `${menosDe1000(t)} MIL`;
     const rr = rest ? menosDe1000(rest) : "";
+
     return [tt, rr].filter(Boolean).join(" ").trim();
   }
 
@@ -232,3 +248,4 @@ document.addEventListener("click", e=>{
     items.classList.add("select-hide");
   }
 });
+
