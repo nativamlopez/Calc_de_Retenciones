@@ -1,251 +1,102 @@
-// ============================
-// Calculadora basada en tu lógica Python
-// + UI tipo "pantalla" (como la imagen)
-// + Monto neto en palabras
-// ============================
-let tipoActual = "Factura";
-const $ = (id) => document.getElementById(id);
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Calculadora de Retenciones</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="screen">
+    <header class="hero">
+      <h1 class="title">CALCULADORA</h1>
+      <h2 class="subtitle">DE RETENCIONES</h2>
+    </header>
 
-function round2(x){
-  return Math.round((Number(x) + Number.EPSILON) * 100) / 100;
-}
+    <section class="panel">
+      <form id="form" class="form" autocomplete="off">
+        <label class="field field--select">
+          <span class="label">TIPO</span>
+          <div class="custom-select" id="tipoSelect">
+            <div class="select-selected" id="selectedTipo">
+              Factura
+            </div>
 
-function ceil2(x){
-  return Math.ceil((Number(x) - 1e-12) * 100) / 100;
-}
+            <div class="select-items select-hide">
+              <div data-value="Factura">Factura</div>
+              <div data-value="Peaje">Peaje</div>
+              <div data-value="Recibo">Recibo</div>
+              <div data-value="Viatico">Viático</div>
+              <div data-value="Planilla">Planilla</div>
+              <div data-value="DJ">DJ</div>
+            </div>
+          </div>
+        </label>
 
-function calcularMontos({ tipo, bien, liquido }) {
-  const liq = Number(liquido);
-  if (!Number.isFinite(liq) || liq < 0) return [NaN,NaN,NaN,NaN,NaN,NaN];
+        <label class="check" id="bienWrap" title="Solo aplica para Recibo">
+          <input id="bien" type="checkbox" />
+          <span>¿ES UN BIEN?</span>
+        </label>
 
-  if (tipo === "Factura" || tipo === "Peaje") {
-    const mn = round2(liq);
-    return [mn, 0, 0, 0, 0, mn];
-  }
+        <label class="field field--line">
+          <span class="label">LÍQUIDO (Bs)</span>
+          <input id="liquido" type="number" inputmode="decimal" step="0.01" min="0" placeholder="100.00" required />
+          <span class="line"></span>
+        </label>
 
-  if (tipo === "Recibo") {
-    const porcentaje = (bien === "SI") ? 92 : 84;
+        <button type="submit" class="cta">CALCULAR RETENCIONES</button>
 
-    const mn = round2(liq * 100 / porcentaje);
+        <p class="hint" id="hint">Selecciona el tipo y escribe el líquido.</p>
+      </form>
+    </section>
 
-    // clave para que sea como tu captura (ej 3.27)
-    const it = ceil2(mn * 0.03);
+    <section class="results">
+      <h3 class="resultsTitle">RESULTADOS</h3>
 
-    const iue   = (bien === "SI")  ? round2(mn * 0.05) : 0;
-    const rciva = (bien !== "SI")  ? round2(mn * 0.13) : 0;
+      <div class="rows" role="list">
+        <div class="row" role="listitem">
+          <span class="k">MONTO NETO</span>
+          <span class="v" id="mn">—</span>
+        </div>
 
-    const total = round2(it + iue + rciva);
-    return [mn, it, iue, rciva, total, round2(liq)];
-  }
+        <div class="row" role="listitem">
+          <span class="k">IT 3%</span>
+          <span class="v" id="it">—</span>
+        </div>
 
-  if (tipo === "Viatico" || tipo === "Viático") {
-    const mn = round2(liq * 100 / 87);
-    const rciva = round2(mn * 0.13);
-    return [mn, 0, 0, rciva, rciva, round2(liq)];
-  }
+        <div class="row" role="listitem">
+          <span class="k">IUE BIEN 5%</span>
+          <span class="v" id="iue">—</span>
+        </div>
 
-  if (tipo === "Planilla" || tipo === "DJ") {
-    const mn = round2(liq * 100 / 84);
-    const it = round2(mn * 0.03);
-    const rciva = round2(mn * 0.13);
-    const total = round2(it + rciva);
-    return [mn, it, 0, rciva, total, round2(liq)];
-  }
+        <div class="row" role="listitem">
+          <span class="k">RC - IVA 13%</span>
+          <span class="v" id="rciva">—</span>
+        </div>
 
-  return [NaN,NaN,NaN,NaN,NaN,NaN];
-}
+        <div class="row row--strong" role="listitem">
+          <span class="k">TOTAL RETENCIÓN</span>
+          <span class="v" id="total">—</span>
+        </div>
 
-function money(n) {
-  const x = Number(n);
-  if (!Number.isFinite(x)) return "—";
-  return x.toLocaleString("es-BO", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
+        <div class="row row--strong" role="listitem">
+          <span class="k">LÍQUIDO PAGABLE</span>
+          <span class="v" id="liqOut">—</span>
+        </div>
+      </div>
 
-/* ============================
-   Número a palabras (ES)
-   - Soporta millones
-   - Devuelve formato: "CIENTO OCHO 70/100 BOLIVIANOS"
-   ============================ */
+      <div class="wordsCard" aria-live="polite">
+        <div class="wordsLabel">MONTO NETO EN PALABRAS</div>
+        <div class="wordsValue" id="mnWords">—</div>
+      </div>
+    </section>
 
-function twoDigits(n){ return String(n).padStart(2, "0"); }
+    <footer class="footer">
+      <div class="brand">NATIVA 2025</div>
+      <div class="by">Hecho por: Matias Lopez Bertram</div>
+    </footer>
+  </main>
 
-function toWordsES_int(n){
-  n = Math.floor(Math.abs(Number(n)));
-
-  if (!Number.isFinite(n)) return "—";
-  if (n === 0) return "CERO";
-
-  const unidades = ["", "UNO", "DOS", "TRES", "CUATRO", "CINCO", "SEIS", "SIETE", "OCHO", "NUEVE"];
-
-  const especiales = {
-    10:"DIEZ", 11:"ONCE", 12:"DOCE", 13:"TRECE", 14:"CATORCE", 15:"QUINCE",
-    16:"DIECISÉIS", 17:"DIECISIETE", 18:"DIECIOCHO", 19:"DIECINUEVE",
-    20:"VEINTE", 21:"VEINTIUNO", 22:"VEINTIDÓS", 23:"VEINTITRÉS", 24:"VEINTICUATRO",
-    25:"VEINTICINCO", 26:"VEINTISÉIS", 27:"VEINTISIETE", 28:"VEINTIOCHO", 29:"VEINTINUEVE"
-  };
-
-  const decenasMap = {
-    3:"TREINTA", 4:"CUARENTA", 5:"CINCUENTA",
-    6:"SESENTA", 7:"SETENTA", 8:"OCHENTA", 9:"NOVENTA"
-  };
-
-  const centenas = ["", "CIENTO", "DOSCIENTOS", "TRESCIENTOS", "CUATROCIENTOS", "QUINIENTOS", "SEISCIENTOS", "SETECIENTOS", "OCHOCIENTOS", "NOVECIENTOS"];
-
-  function menosDe100(x){
-    if (x < 10) return unidades[x];
-    if (especiales[x]) return especiales[x];
-
-    const d = Math.floor(x / 10);
-    const u = x % 10;
-
-    const tens = decenasMap[d] || ""; // 30..90
-    if (u === 0) return tens;
-    return `${tens} Y ${unidades[u]}`.trim();
-  }
-
-  function menosDe1000(x){
-    if (x === 0) return "";
-    if (x === 100) return "CIEN";
-
-    const c = Math.floor(x / 100);
-    const r = x % 100;
-
-    const a = c ? centenas[c] : "";
-    const b = r ? menosDe100(r) : "";
-
-    return [a, b].filter(Boolean).join(" ").trim();
-  }
-
-  // millones
-  if (n >= 1_000_000){
-    const m = Math.floor(n / 1_000_000);
-    const rest = n % 1_000_000;
-    const mm = (m === 1) ? "UN MILLÓN" : `${toWordsES_int(m)} MILLONES`;
-    const rr = rest ? toWordsES_int(rest) : "";
-    return [mm, rr].filter(Boolean).join(" ").trim();
-  }
-
-  // miles
-  if (n >= 1000){
-    const t = Math.floor(n / 1000);
-    const rest = n % 1000;
-
-    const tt = (t === 1) ? "MIL" : `${menosDe1000(t)} MIL`;
-    const rr = rest ? menosDe1000(rest) : "";
-
-    return [tt, rr].filter(Boolean).join(" ").trim();
-  }
-
-  return menosDe1000(n);
-}
-
-function montoEnPalabras(monto){
-  const x = Number(monto);
-  if (!Number.isFinite(x)) return "—";
-
-  // 1) Redondea el monto a 2 decimales ANTES de separar entero/centavos
-  const red = Math.round((x + Number.EPSILON) * 100) / 100;
-
-  // 2) Separación segura (evita errores binarios)
-  const abs = Math.abs(red);
-  let entero = Math.floor(abs);
-  let cent = Math.round((abs - entero) * 100);
-
-  // 3) Si por redondeo centavos da 100, corregimos
-  if (cent === 100) {
-    entero += 1;
-    cent = 0;
-  }
-
-  let palabras = toWordsES_int(entero);
-
-  // "UNO" -> "UN" al final (antes de moneda)
-  palabras = palabras.replace(/\bUNO\b$/, "UN");
-
-  const cents = `${twoDigits(cent)}/100`;
-  const moneda = (entero === 1) ? "BOLIVIANO" : "BOLIVIANOS";
-  const signo = red < 0 ? "MENOS " : "";
-
-  return `${signo}${palabras} ${cents} ${moneda}`.trim();
-}
-function setCells([mn, it, iue, rciva, total, liq]) {
-  $("mn").textContent = money(mn);
-  $("it").textContent = money(it);
-  $("iue").textContent = money(iue);
-  $("rciva").textContent = money(rciva);
-  $("total").textContent = money(total);
-  $("liqOut").textContent = money(liq);
-
-  // ✅ monto neto en palabras
-  $("mnWords").textContent = Number.isFinite(Number(mn)) ? montoEnPalabras(mn) : "—";
-}
-
-function updateBienVisibility() {
-  const wrap = $("bienWrap");
-  const isRecibo = (tipoActual === "Recibo");
-  wrap.style.display = isRecibo ? "flex" : "none";
-}
-
-function buildHint(tipo, bien) {
-  if (tipo === "Recibo") {
-    return `Recibo: porcentaje ${bien === "SI" ? "92%" : "84%"}; IT 3%; ${bien === "SI" ? "IUE 5%" : "RC-IVA 13%"}.`;
-  }
-  if (tipo === "Viatico" || tipo === "Viático") return "Viático: MN = líquido * 100 / 87; RC-IVA 13%.";
-  if (tipo === "Planilla") return "Planilla: MN = líquido * 100 / 84; IT 3%; RC-IVA 13%.";
-  if (tipo === "DJ") return "DJ: MN = líquido * 100 / 84; IT 3%; RC-IVA 13%.";
-  return "Factura/Peaje: MN = líquido; sin retenciones.";
-}
-
-// Init
-updateBienVisibility();
-$("hint").textContent = buildHint(tipoActual, $("bien")?.checked ? "SI" : "NO");
-setCells([NaN, NaN, NaN, NaN, NaN, NaN]);
-
-$("bien")?.addEventListener("change", () => {
-  const bien = $("bien")?.checked ? "SI" : "NO";
-  $("hint").textContent = buildHint(tipoActual, bien);
-});
-
-$("form").addEventListener("submit", (e) => {
-  e.preventDefault();
-
-  const tipo = tipoActual;
-  const bien = $("bien").checked ? "SI" : "NO";
-  const liquido = $("liquido").value;
-
-  const res = calcularMontos({ tipo, bien, liquido });
-  setCells(res);
-  $("hint").textContent = buildHint(tipo, bien);
-});
-
-/* ==========================
-   CUSTOM SELECT LOGIC
-========================== */
-
-const selected = document.getElementById("selectedTipo");
-const items = document.querySelector(".select-items");
-
-selected.addEventListener("click", () => {
-  items.classList.toggle("select-hide");
-});
-
-items.querySelectorAll("div").forEach(opt => {
-  opt.addEventListener("click", () => {
-
-    tipoActual = opt.dataset.value;
-    selected.textContent = opt.textContent;
-
-    items.classList.add("select-hide");
-
-    updateBienVisibility();
-    $("hint").textContent =
-      buildHint(tipoActual, $("bien").checked ? "SI" : "NO");
-  });
-});
-
-document.addEventListener("click", e=>{
-  if(!e.target.closest(".custom-select")){
-    items.classList.add("select-hide");
-  }
-});
-
+  <script src="app.js"></script>
+</body>
+</html>
