@@ -1,139 +1,116 @@
 // ============================
-// Calculadora (ENTEROS en centavos)
-// + UI tipo "pantalla"
+// Calculadora basada en tu lógica Python
+// + UI tipo "pantalla" (como la imagen)
 // + Monto neto en palabras
 // ============================
-
 let tipoActual = "Factura";
 const $ = (id) => document.getElementById(id);
 
-/* ============================
-   ENTEROS (centavos) para precisión
-   - Recomendado: SCALE = 100 (centavos)
-   - Si INSISTES en x10: cambia a 10 (pero pierdes precisión a 2 decimales)
-   ============================ */
-const SCALE = 100;
-
-function toIntMoney(x){
+function round2(x) {
   const n = Number(x);
-  if (!Number.isFinite(n)) return NaN;
-  return Math.round((n + Number.EPSILON) * SCALE);
-}
-function fromIntMoney(i){
-  return i / SCALE;
+
+  if (!Number.isFinite(n)) {
+    return NaN;
+  }
+
+  return Math.round(n * 100) / 100;
 }
 
-// división entera con redondeo al más cercano
-function divRound(numer, denom){
-  if (denom === 0) return NaN;
-  const sign = Math.sign(numer) * Math.sign(denom) || 1;
-  numer = Math.abs(numer);
-  denom = Math.abs(denom);
-  return sign * Math.floor((numer + denom / 2) / denom);
-}
-
-// división entera con CEIL (hacia arriba)
-function divCeil(numer, denom){
-  if (denom === 0) return NaN;
-  const sign = Math.sign(numer) * Math.sign(denom) || 1;
-  numer = Math.abs(numer);
-  denom = Math.abs(denom);
-  return sign * Math.floor((numer + denom - 1) / denom);
-}
-
-function pctRound(montoInt, pct){
-  // montoInt * pct / 100 (redondeo normal)
-  return divRound(montoInt * pct, 100);
-}
-function pctCeil(montoInt, pct){
-  // montoInt * pct / 100 (ceil)
-  return divCeil(montoInt * pct, 100);
-}
-
-/* ============================
-   Cálculo de montos (TODO en enteros)
-   Devuelve valores como Number en decimal (al final)
-   ============================ */
 function calcularMontos({ tipo, bien, liquido }) {
-  const liqI = toIntMoney(liquido); // ENTERO (centavos)
-  if (!Number.isFinite(liqI) || liqI < 0) return [NaN,NaN,NaN,NaN,NaN,NaN];
+  const liq = Number(liquido);
 
-  // Factura / Peaje: MN = líquido
+  if (!Number.isFinite(liq) || liq < 0) {
+    return [NaN, NaN, NaN, NaN, NaN, NaN];
+  }
+
   if (tipo === "Factura" || tipo === "Peaje") {
-    const mnI = liqI;
-    return [fromIntMoney(mnI), 0, 0, 0, 0, fromIntMoney(liqI)];
+    const mn = liq;
+    return [mn, 0, 0, 0, 0, mn];
   }
 
-  // Recibo
   if (tipo === "Recibo") {
-    const porcentaje = (bien === "SI") ? 92 : 84;
+    let mn = 0;
+    let it = 0;
+    let iue = 0;
+    let rciva = 0;
+    let total = 0;
 
-    // 1) MN "teórico" por fórmula (solo para calcular retenciones)
-    const mnTheoryI = divRound(liqI * 100, porcentaje);
+    if (bien === "SI") {
+      // Igual que el APK: divisor 0.92
+      mn = round2(liq / 0.92);
 
-    // 2) Retenciones sobre MN teórico
-    const itI = pctCeil(mnTheoryI, 3);
-    const iueI   = (bien === "SI") ? pctRound(mnTheoryI, 5)  : 0;
-    const rcivaI = (bien !== "SI") ? pctRound(mnTheoryI, 13) : 0;
+      // IUE = 5%
+      iue = round2(mn * 0.05);
 
-    const totalI = itI + iueI + rcivaI;
+      // RC-IVA = 0%
+      rciva = round2(mn * 0);
 
-    // 3) ✅ Reconciliación: fuerza MN = Líquido + Retenciones
-    const mnI = liqI + totalI;
+      // IT se calcula por diferencia, no como mn * 0.03
+      it = mn - iue - rciva - liq;
+
+      total = it + iue + rciva;
+    } else {
+      // Igual que el APK: divisor 0.84
+      mn = round2(liq / 0.84);
+
+      // IUE = 0%
+      iue = round2(mn * 0);
+
+      // RC-IVA = 13%
+      rciva = round2(mn * 0.13);
+
+      // IT se calcula por diferencia, no como mn * 0.03
+      it = mn - iue - rciva - liq;
+
+      total = it + iue + rciva;
+    }
 
     return [
-      fromIntMoney(mnI),
-      fromIntMoney(itI),
-      fromIntMoney(iueI),
-      fromIntMoney(rcivaI),
-      fromIntMoney(totalI),
-      fromIntMoney(liqI),
+      round2(mn),
+      round2(it),
+      round2(iue),
+      round2(rciva),
+      round2(total),
+      round2(liq)
     ];
   }
 
-  // Viático
   if (tipo === "Viatico" || tipo === "Viático") {
-    const mnTheoryI = divRound(liqI * 100, 87);
-    const rcivaI = pctRound(mnTheoryI, 13);
-    const totalI = rcivaI;
-
-    const mnI = liqI + totalI; // ✅ reconciliado
+    const mn = round2(liq / 0.87);
+    const rciva = round2(mn * 0.13);
+    const total = rciva;
 
     return [
-      fromIntMoney(mnI),
+      round2(mn),
       0,
       0,
-      fromIntMoney(rcivaI),
-      fromIntMoney(totalI),
-      fromIntMoney(liqI),
+      round2(rciva),
+      round2(total),
+      round2(liq)
     ];
   }
 
-  // Planilla / DJ
   if (tipo === "Planilla" || tipo === "DJ") {
-    const mnTheoryI = divRound(liqI * 100, 84);
-    const itI = pctRound(mnTheoryI, 3);
-    const rcivaI = pctRound(mnTheoryI, 13);
-    const totalI = itI + rcivaI;
+    const mn = round2(liq / 0.84);
+    const rciva = round2(mn * 0.13);
+    const iue = 0;
 
-    const mnI = liqI + totalI; // ✅ reconciliado
+    // Para mantener la misma lógica del APK:
+    const it = mn - iue - rciva - liq;
+    const total = it + iue + rciva;
 
     return [
-      fromIntMoney(mnI),
-      fromIntMoney(itI),
-      0,
-      fromIntMoney(rcivaI),
-      fromIntMoney(totalI),
-      fromIntMoney(liqI),
+      round2(mn),
+      round2(it),
+      round2(iue),
+      round2(rciva),
+      round2(total),
+      round2(liq)
     ];
   }
 
-  return [NaN,NaN,NaN,NaN,NaN,NaN];
+  return [NaN, NaN, NaN, NaN, NaN, NaN];
 }
-
-/* ============================
-   Formato de dinero
-   ============================ */
 function money(n) {
   const x = Number(n);
   if (!Number.isFinite(x)) return "—";
@@ -143,12 +120,14 @@ function money(n) {
 /* ============================
    Número a palabras (ES)
    - Soporta millones
-   - Devuelve: "CIENTO OCHO 70/100 BOLIVIANOS"
+   - Devuelve formato: "CIENTO OCHO 70/100 BOLIVIANOS"
    ============================ */
+
 function twoDigits(n){ return String(n).padStart(2, "0"); }
 
 function toWordsES_int(n){
   n = Math.floor(Math.abs(n));
+
   if (n === 0) return "CERO";
 
   const unidades = ["", "UNO", "DOS", "TRES", "CUATRO", "CINCO", "SEIS", "SIETE", "OCHO", "NUEVE"];
@@ -179,6 +158,7 @@ function toWordsES_int(n){
     return [a, b].filter(Boolean).join(" ").trim();
   }
 
+  // millones
   if (n >= 1_000_000){
     const m = Math.floor(n / 1_000_000);
     const rest = n % 1_000_000;
@@ -187,6 +167,7 @@ function toWordsES_int(n){
     return [mm, rr].filter(Boolean).join(" ").trim();
   }
 
+  // miles
   if (n >= 1000){
     const t = Math.floor(n / 1000);
     const rest = n % 1000;
@@ -202,18 +183,23 @@ function montoEnPalabras(monto){
   const x = Number(monto);
   if (!Number.isFinite(x)) return "—";
 
+  // 1) Redondea el monto a 2 decimales ANTES de separar entero/centavos
   const red = Math.round((x + Number.EPSILON) * 100) / 100;
 
+  // 2) Separación segura (evita errores binarios)
   const abs = Math.abs(red);
   let entero = Math.floor(abs);
   let cent = Math.round((abs - entero) * 100);
 
+  // 3) Si por redondeo centavos da 100, corregimos
   if (cent === 100) {
     entero += 1;
     cent = 0;
   }
 
   let palabras = toWordsES_int(entero);
+
+  // "UNO" -> "UN" al final (antes de moneda)
   palabras = palabras.replace(/\bUNO\b$/, "UN");
 
   const cents = `${twoDigits(cent)}/100`;
@@ -222,10 +208,6 @@ function montoEnPalabras(monto){
 
   return `${signo}${palabras} ${cents} ${moneda}`.trim();
 }
-
-/* ============================
-   UI helpers
-   ============================ */
 function setCells([mn, it, iue, rciva, total, liq]) {
   $("mn").textContent = money(mn);
   $("it").textContent = money(it);
@@ -234,12 +216,12 @@ function setCells([mn, it, iue, rciva, total, liq]) {
   $("total").textContent = money(total);
   $("liqOut").textContent = money(liq);
 
+  // ✅ monto neto en palabras
   $("mnWords").textContent = Number.isFinite(Number(mn)) ? montoEnPalabras(mn) : "—";
 }
 
 function updateBienVisibility() {
   const wrap = $("bienWrap");
-  if (!wrap) return;
   const isRecibo = (tipoActual === "Recibo");
   wrap.style.display = isRecibo ? "flex" : "none";
 }
@@ -254,9 +236,7 @@ function buildHint(tipo, bien) {
   return "Factura/Peaje: MN = líquido; sin retenciones.";
 }
 
-/* ============================
-   INIT
-   ============================ */
+// Init
 updateBienVisibility();
 $("hint").textContent = buildHint(tipoActual, $("bien")?.checked ? "SI" : "NO");
 setCells([NaN, NaN, NaN, NaN, NaN, NaN]);
@@ -270,8 +250,8 @@ $("form").addEventListener("submit", (e) => {
   e.preventDefault();
 
   const tipo = tipoActual;
-  const bien = $("bien")?.checked ? "SI" : "NO";
-  const liquido = $("liquido")?.value;
+  const bien = $("bien").checked ? "SI" : "NO";
+  const liquido = $("liquido").value;
 
   const res = calcularMontos({ tipo, bien, liquido });
   setCells(res);
@@ -281,27 +261,30 @@ $("form").addEventListener("submit", (e) => {
 /* ==========================
    CUSTOM SELECT LOGIC
 ========================== */
+
 const selected = document.getElementById("selectedTipo");
 const items = document.querySelector(".select-items");
 
-selected?.addEventListener("click", () => {
-  items?.classList.toggle("select-hide");
+selected.addEventListener("click", () => {
+  items.classList.toggle("select-hide");
 });
 
-items?.querySelectorAll("div").forEach(opt => {
+items.querySelectorAll("div").forEach(opt => {
   opt.addEventListener("click", () => {
+
     tipoActual = opt.dataset.value;
     selected.textContent = opt.textContent;
 
     items.classList.add("select-hide");
 
     updateBienVisibility();
-    $("hint").textContent = buildHint(tipoActual, $("bien")?.checked ? "SI" : "NO");
+    $("hint").textContent =
+      buildHint(tipoActual, $("bien").checked ? "SI" : "NO");
   });
 });
 
 document.addEventListener("click", e=>{
   if(!e.target.closest(".custom-select")){
-    items?.classList.add("select-hide");
+    items.classList.add("select-hide");
   }
 });
